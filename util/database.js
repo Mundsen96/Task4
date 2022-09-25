@@ -25,5 +25,15 @@ const getDb = () => {
   throw 'No Database found!'
 };
 
+// const getNextIdValue = (sequenceName) => {
+//   var sequenceDocument = _db.counters.findAndModify({
+//      query:{_id: sequenceName },
+//      update: {$inc:{sequence_value:1}},
+//      new:true
+//   });
+//   return sequenceDocument.sequence_value;
+// }
+
 exports.mongoConnect = mongoConnect;
 exports.getDb = getDb;
+// exports.getNextIdValue = getNextIdValue;

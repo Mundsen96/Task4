@@ -9,7 +9,7 @@ import ErrorPage from './views/ErrorPage';
 import reportWebVitals from './reportWebVitals';
 import {
   createBrowserRouter,
-  RouterProvider,
+  RouterProvider
 } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -25,7 +25,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/mainpage",
-    element: <MainPage />
+    element: <MainPage />,
   },
   {
     path: "/register",

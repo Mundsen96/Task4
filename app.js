@@ -1,48 +1,45 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+
+const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const mongoConnect = require('./util/database').mongoConnect;
+const adminController = require('./controllers/admin');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
+const isAuth = require('./middleware/is-Auth');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 
-var app = express();
+const app = express();
+const store = new MongoDBStore({
+  uri: 'mongodb+srv://Sebastian:sebamlot@task4cluster.7hfe3rj.mongodb.net/users',
+  collection: 'sessions'
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(cors());
-app.use(logger('dev'));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({secret: 'my secret', resave: false, saveUninitialized: false, store: store}));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+require('dotenv').config();
+port = parseInt(process.env.PORT);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+app.listen(port,_=>console.log(`The server is listening on port ${port}`) );
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.get('/users',isAuth , adminController.getUsers);
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+app.post('/register', adminController.postAddUser);
+
+app.post('/login', adminController.logIn);
+app.post('/users', adminController.updateUsers);
+// app.get('/auth', isAuth);
 
 mongoConnect(() => {
   app.listen(3002);
 });
 
-module.exports = app;
+

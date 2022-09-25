@@ -2,51 +2,92 @@ import Table from 'react-bootstrap/Table';
 import React, { useState, useEffect } from 'react';
 import Stack from 'react-bootstrap/Stack';
 import Button from 'react-bootstrap/Button';
+import unblockIcon from '../icons/unblock.svg';
+import deleteIcon from '../icons/delete.svg';
+import { handleInputs, handleToPost } from '../functions/dataHandler';
+import Axios from 'axios';
+import Navigate from './Nav';
+import {useNavigate} from 'react-router-dom';
 
 function MainPage() {
-  const [data, setData] = useState(null);
+  const [serverData, setServerData] = useState(null);
+  const [isCheckAll, setIsCheckAll] = useState(false);
+  const [isCheck, setIsCheck] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/users')
-      .then((res) => res.json())
-      .then((users) => setData({ users }));
+    Axios.get('/users')
+    .then(users => {
+      if(!users.data){
+        return navigate('/login');
+      }
+      setServerData(users.data.map((user, index) => Object.assign({}, user, { id: index + 1 })))
+    })
+    .catch((err) => {
+      console.log(err);
+    })
   }, []);
 
+  const handleSelectAll = (e) => {
+    setIsCheckAll(!isCheckAll);
+    setIsCheck(serverData.map((li) => li._id));
+    if (isCheckAll) {
+      setIsCheck([]);
+    }
+  };
+
+  const handleClick = (e) => {
+    const { id, checked } = e.target;
+    setIsCheck([...isCheck, id]);
+    if (!checked) {
+      setIsCheck(isCheck.filter((item) => item !== id));
+    }
+  };
+
+  const handleButtons = (type) => {
+    let checkedInputs = handleInputs(
+      document.querySelectorAll("input[type='checkbox']")
+    );
+    let postData = handleToPost(serverData, checkedInputs, type);
+    setServerData(postData);
+    Axios.post('/users', {postData}, {withCredentials: true})
+    .then(res => {
+      if(!res.data){
+        return navigate('/login');
+      }
+    })
+    .catch(err => console.log(err))
+  };
+
+
   return (
-    <Stack gap={2} className="col-md-5 mx-auto">
+    <div>
+      <Navigate/>
+      `<Stack className="mx-auto w-50">
+ 
       <h1>Users</h1>
-      <Stack direction="horizontal" gap={3}>
-        <Button variant="danger">Block</Button>
-        <button type="button" class="btn btn-primary px-3">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="currentColor"
-            class="bi bi-unlock-fill"
-            viewBox="0 0 16 16"
-          >
-            <path d="M11 1a2 2 0 0 0-2 2v4a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h5V3a3 3 0 0 1 6 0v4a.5.5 0 0 1-1 0V3a2 2 0 0 0-2-2z" />
-          </svg>
+      <Stack direction="horizontal" gap={5}>
+        <Button className="px-5" variant="danger" onClick={() => handleButtons('blocked')}>
+          Block
+        </Button>
+        <button type="button" className="btn btn-primary px-5">
+          <img src={unblockIcon} alt="Unblock Icon" onClick={() => handleButtons('active')} />
         </button>
-        <button type="button" className="btn px-3">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="currentColor"
-            class="bi bi-trash-fill"
-            viewBox="0 0 16 16"
-          >
-            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z" />
-          </svg>
+        <button type="button" className="btn px-5" onClick={() => handleButtons(null)}>
+          <img src={deleteIcon} alt="delete Icon" />
         </button>
       </Stack>
       <Table striped bordered hover>
         <thead>
           <tr>
             <th>
-              <input type="checkbox" name="pickAll" id="all" />
+              <input
+                type="checkbox"
+                name="selectAll"
+                id="selectAll"
+                onChange={handleSelectAll}
+                checked={isCheckAll}
+              />
             </th>
             <th>#</th>
             <th>Username</th>
@@ -57,19 +98,29 @@ function MainPage() {
           </tr>
         </thead>
         <tbody>
-          {data &&
-            data.users.map((user, key) => (
-              <tr key={user.id}>
+          {serverData &&
+            serverData.map((user, key) => (
+              <tr key={user._id}>
                 <td>
-                  <input type="checkbox" id={user.id} />
+                  <input
+                    type="checkbox"
+                    id={user._id}
+                    onChange={handleClick}
+                    checked={isCheck.includes(user._id)}
+                  />
                 </td>
                 <td>{user.id}</td>
-                <td>{user.username}</td>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>{user.lastTimeLogged}</td>
+                <td>{user.registrationTime}</td>
+                <td>{user.status}</td>
               </tr>
             ))}
         </tbody>
       </Table>
     </Stack>
+    </div>
   );
 }
 // id, name, e-mail, last login time, registration time, status (active/blocked)
