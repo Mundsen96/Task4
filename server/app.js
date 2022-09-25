@@ -7,11 +7,12 @@ const adminController = require('./controllers/admin');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const isAuth = require('./middleware/is-Auth');
+const MONG_URI = process.env.MONG_URI;
 
 
 const app = express();
 const store = new MongoDBStore({
-  uri: 'mongodb+srv://Sebastian:sebamlot@task4cluster.7hfe3rj.mongodb.net/users',
+  uri: MONG_URI,
   collection: 'sessions'
 });
 
@@ -39,7 +40,7 @@ app.post('/users', adminController.updateUsers);
 // app.get('/auth', isAuth);
 
 mongoConnect(() => {
-  app.listen(3002);
+  app.listen(process.env.PORT || 5000);
 });
 
 
