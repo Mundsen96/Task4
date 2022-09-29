@@ -20,6 +20,9 @@ function Login() {
     axiosInstance.post('/login', {dataToSend}, {withCredentials: false})
       .then(response => {
         if(response.data.isLoggedIn){
+          sessionStorage.setItem("isLoggedIn", response.data.isLoggedIn)
+          sessionStorage.setItem("id", response.data.id)
+          console.log(sessionStorage.getItem("isLoggedIn"))
           navigate('/mainpage');
         }else{
           setIsRegistered(false);
